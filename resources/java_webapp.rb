@@ -22,6 +22,8 @@ include Chef::Resource::ApplicationBase
 attribute :database_master_role, :kind_of => [String, NilClass], :default => nil
 # Actually defaults to "context.xml.erb", but nil means it wasn't set by the user
 attribute :context_template, :kind_of => [String, NilClass], :default => nil
+attribute :maven_packages, :kind_of => [Hash], :default => []
+attribute :ark_packages, :kind_of => [Hash], :default => []
 
 def database(*args, &block)
   @database ||= Mash.new

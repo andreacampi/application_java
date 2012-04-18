@@ -21,7 +21,11 @@ include Chef::Mixin::LanguageIncludeRecipe
 
 action :before_compile do
 
-  # include_recipe 'java'
+  include_recipe 'java'
+  if new_resource.maven_packages.any?
+    include_recipe 'maven'
+    package 'maven'
+  end
 
   new_resource.strategy :java_remote_file
 end
@@ -29,6 +33,8 @@ end
 action :before_deploy do
 
   create_hierarchy
+
+  install_packages
 
   create_context_file
 
@@ -56,12 +62,36 @@ def create_hierarchy
     recursive true
   end
 
-  %w{ log pids system }.each do |dir|
+  shared_dirs = %w{ log pids system }
+  shared_dirs << "lib" if new_resource.maven_packages.any?
+  shared_dirs.each do |dir|
     directory "#{new_resource.path}/shared/#{dir}" do
       owner new_resource.owner
       group new_resource.group
       mode '0755'
       recursive true
+    end
+  end
+end
+
+def install_packages
+  new_resource.maven_packages.each do |name,opts|
+    maven name do
+      group_id opts[:group_id]
+      version opts[:version]
+      dest "#{new_resource.path}/shared/lib"  # XXX
+    end
+  end
+
+  new_resource.ark_packages.each do |name,opts|
+    ark name do
+      url opts[:url]
+      checksum opts[:checksum]
+      owner new_resource.owner
+      group new_resource.group
+      path "#{new_resource.path}/shared/lib"  # XXX
+      creates name
+      action :dump
     end
   end
 end
