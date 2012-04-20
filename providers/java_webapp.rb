@@ -24,7 +24,6 @@ action :before_compile do
   include_recipe 'java'
   if new_resource.maven_packages.any?
     include_recipe 'maven'
-    package 'maven'
   end
 
   new_resource.strategy :java_remote_file
